@@ -1,0 +1,120 @@
+import pandas as pd
+import requests
+from bs4 import BeautifulSoup
+
+# Define input and output file paths
+input_file = r'/Users/system/Downloads/excel file name' 
+output_file = r'/Users/system/Downloads/excel file name'' 
+
+# Read the input Excel file
+df = pd.read_excel(input_file)
+
+# Set the start and end row for processing (inclusive)
+start_row = 0  # Change this value as needed
+end_row = 100   # Change this value as needed
+
+# Limit the DataFrame to the specified range of rows
+df = df.iloc[start_row:end_row]
+
+data = []
+
+
+for index, row in df.iterrows():
+    nces_id = row['NCES ID']
+    university_name = row['University Name']
+    
+    url = f'https://nces.ed.gov/collegenavigator/?q={university_name.replace(" ", "+")}&s=all&id={nces_id}'
+    
+    response = requests.get(url)
+    
+    soup = BeautifulSoup(response.content, 'html.parser')
+    
+
+    sat_percent = ''
+    act_percent = ''
+    sat_ebrw_25th = ''
+    sat_ebrw_75th = ''
+    sat_math_25th = ''
+    sat_math_75th = ''
+    act_composite_25th = ''
+    act_composite_75th = ''
+    
+    
+    try:
+        sat_percent = soup.find(text='SAT').find_next('td').find_next('td').text.strip()
+    except:
+        pass  
+    
+    try:
+        act_percent = soup.find(text='ACT').find_next('td').find_next('td').text.strip()
+    except:
+        pass  
+    
+    try:
+        sat_ebrw_25th = soup.find(text='SAT Evidence-Based Reading and Writing').find_next('td').text.strip()
+    except:
+        pass  
+    
+    try:
+        sat_ebrw_75th = soup.find(text='SAT Evidence-Based Reading and Writing').find_next('td').find_next('td').find_next('td').text.strip()
+    except:
+        pass  
+    
+    try:
+        sat_math_25th = soup.find(text='SAT Math').find_next('td').text.strip()
+    except:
+        pass  
+    
+    try:
+        sat_math_75th = soup.find(text='SAT Math').find_next('td').find_next('td').find_next('td').text.strip()
+    except:
+        pass  
+    
+    try:
+        act_composite_25th = soup.find(text='ACT Composite').find_next('td').text.strip()
+    except:
+        pass  
+    
+    try:
+        act_composite_75th = soup.find(text='ACT Composite').find_next('td').find_next('td').find_next('td').text.strip()
+    except:
+        pass  
+    
+    print(f"University: {university_name} (NCES ID: {nces_id})")
+    
+    print(f"Students submitting SAT scores (Percent): {sat_percent}")
+    
+    print(f"Students submitting ACT scores (Percent): {act_percent}")
+    
+    print(f"SAT Evidence-Based Reading and Writing 25th percentile score: {sat_ebrw_25th}")
+    
+    print(f"SAT Evidence-Based Reading and Writing 75th percentile score: {sat_ebrw_75th}")
+    
+    print(f"SAT Math 25th percentile score: {sat_math_25th}")
+    
+    print(f"SAT Math 75th percentile score: {sat_math_75th}")
+    
+    print(f"ACT Composite 25th percentile score: {act_composite_25th}")
+    
+    print(f"ACT Composite 75th percentile score: {act_composite_75th}")
+    
+    data.append({
+        'NCES ID': nces_id,
+        'University Name': university_name,
+        'Students submitting SAT scores (Percent)': sat_percent,
+        'Students submitting ACT scores (Percent)': act_percent,
+        'SAT Evidence-Based Reading and Writing 25th percentile score': sat_ebrw_25th,
+        'SAT Evidence-Based Reading and Writing 75th percentile score': sat_ebrw_75th,
+        'SAT Math 25th percentile score': sat_math_25th,
+        'SAT Math 75th percentile score': sat_math_75th,
+        'ACT Composite 25th percentile score': act_composite_25th,
+        'ACT Composite 75th percentile score': act_composite_75th,
+    })
+
+
+output_df = pd.DataFrame(data)
+
+
+output_df.to_excel(output_file, index=False)
+
+print("Data extraction complete. Saved to:", output_file)
