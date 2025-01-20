@@ -3,22 +3,22 @@ import requests
 from bs4 import BeautifulSoup
 
 # Define input and output file paths
-input_file = r'/Users/System Name/Downloads/Input File Name' 
-output_file = r'/Users/System Name/Downloads/Output File Name' 
+input_file = r'/Users/System Name/Downloads/Input Excel file Name' 
+output_file = r'/Users/System Name/Downloads/Output Excel file Name' 
 
-# Read the input Excel file
+
 df = pd.read_excel(input_file)
 
 # Set the start and end row for processing (inclusive)
-start_row = 450  # Change this value as needed
-end_row = 921    # Change this value as needed
+start_row = a  # Change this value as needed
+end_row = b  # Change this value as needed
 
 # Limit the DataFrame to the specified range of rows
 df = df.iloc[start_row:end_row]
 
 data = []
 
-# Process each row in the DataFrame
+
 for index, row in df.iterrows():
     nces_id = row['NCES ID']
     university_name = row['University Name']
@@ -29,15 +29,14 @@ for index, row in df.iterrows():
     
     soup = BeautifulSoup(response.content, 'html.parser')
     
-    # Initialize variables to store data, defaulting to blank if not found
     num_applicants_total = ''
     percent_admitted_total = ''
     percent_admitted_enrolled_total = ''
+    student_faculty_ratio = ''  
     
-    # Find the specific table for undergraduate admissions
     try:
         admissions_table = soup.find('div', class_='tablenames', text='Undergraduate Admissions Fall 2023').find_next('table', class_='tabular')
-        
+
         # Loop through each row in the table body
         for row in admissions_table.find('tbody').find_all('tr'):
             row_label = row.find('td', scope='row').text.strip()
@@ -53,6 +52,18 @@ for index, row in df.iterrows():
     except Exception as e:
         print(f"Error extracting admissions data for {university_name} (NCES ID: {nces_id}): {e}")
 
+    # Extracting student-to-faculty ratio from general information table
+    try:
+        general_info_table = soup.find('table', class_='layouttab')
+        for row in general_info_table.find_all('tr'):
+            if 'Student-to-faculty ratio:' in row.text:
+                student_faculty_ratio_text = row.find_all('td')[1].text.strip()  
+                # Convert "15 to 1" into a numeric ratio (15)
+                student_faculty_ratio = int(student_faculty_ratio_text.split()[0])  
+
+    except Exception as e:
+        print(f"Error extracting student-to-faculty ratio for {university_name} (NCES ID: {nces_id}): {e}")
+
     print(f"University: {university_name} (NCES ID: {nces_id})")
     
     print(f"Number of applicants (Total): {num_applicants_total}")
@@ -60,6 +71,8 @@ for index, row in df.iterrows():
     print(f"Percent admitted (Total): {percent_admitted_total}")
     
     print(f"Percent admitted who enrolled (Total): {percent_admitted_enrolled_total}")
+    
+    print(f"Student-to-faculty ratio: {student_faculty_ratio}")
 
     data.append({
         'NCES ID': nces_id,
@@ -67,6 +80,7 @@ for index, row in df.iterrows():
         'Number of applicants (Total)': num_applicants_total,
         'Percent admitted (Total)': percent_admitted_total,
         'Percent admitted who enrolled (Total)': percent_admitted_enrolled_total,
+        'Student-to-faculty Ratio': student_faculty_ratio,  # Add new data point here
     })
 
 # Create a DataFrame from the collected data
