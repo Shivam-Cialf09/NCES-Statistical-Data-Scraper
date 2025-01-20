@@ -52,7 +52,7 @@ for index, row in df.iterrows():
     except Exception as e:
         print(f"Error extracting admissions data for {university_name} (NCES ID: {nces_id}): {e}")
 
-    # Extracting student-to-faculty ratio from general information table
+
     try:
         general_info_table = soup.find('table', class_='layouttab')
         for row in general_info_table.find_all('tr'):
@@ -83,10 +83,10 @@ for index, row in df.iterrows():
         'Student-to-faculty Ratio': student_faculty_ratio,  # Add new data point here
     })
 
-# Create a DataFrame from the collected data
+
 output_df = pd.DataFrame(data)
 
-# Save the DataFrame to an Excel file
+
 output_df.to_excel(output_file, index=False)
 
 print("Data extraction complete. Saved to:", output_file)
